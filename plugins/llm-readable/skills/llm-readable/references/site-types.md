@@ -23,7 +23,9 @@ Questions it will try to answer:
 Checks F1–F9 in checklist.md, plus:
 - Each case study opens with a short **facts line**: Role · Team · Duration · Platform · Status (shipped / concept / ongoing). Offer to add it, but the values must come from the author.
 - Experience entries include role, company, start–end dates and 1–3 lines of what they did.
-- Skills appear in plain words somewhere crawlable (bio, about, footer, JSON-LD `knowsAbout`).
+- Skills appear in plain words somewhere crawlable (bio, about, footer, JSON-LD `knowsAbout`). Tools can be AI-only if the author prefers (llms.txt + `knowsAbout`, not the page).
+- Location and availability in the author's own words (JSON-LD `address`, llms.txt). Quote availability lines rather than paraphrasing them into third person.
+- Each case study is linked to the role it was done in, so readers get role, company and period even when the page only shows a write-up date.
 - Side projects/experiments get one line saying what each is and what it was built with.
 - Writing/notes are a strength: they show thinking and voice. Make sure they're in llms-full.
 

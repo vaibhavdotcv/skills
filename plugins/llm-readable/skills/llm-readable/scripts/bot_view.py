@@ -286,7 +286,10 @@ def analyse_page(url, ua):
         "inline_base64_count": len(base64),
         "inline_base64_bytes": sum(len(b) for b in base64),
         "script_tags": p.scripts,
-        "likely_client_rendered": len(text) < 250 and p.scripts > 3,
+        # An empty JS shell has no h1. A page with an h1 but little text is usually
+        # a photo grid or short list rendered on the server: flag it for review only.
+        "likely_client_rendered": len(text) < 250 and p.scripts > 3 and not any(lvl == 1 for lvl, _ in p.headings),
+        "low_text": len(text) < 250,
         "text_preview": text[:400],
     })
     return page
@@ -385,7 +388,7 @@ def score_hints(s, indexable):
         return "fail" if fail else ("partial" if partial else "pass")
 
     hints = {
-        "A1": verdict(bool(s["pages_likely_client_rendered"])),
+        "A1": "fail" if s["pages_likely_client_rendered"] else ("review" if s["pages_low_text"] else "pass"),
         "A3": "fail" if not ok200("/robots.txt") else ("review" if blocked else "pass"),
         "A4": verdict(not ok200("/sitemap.xml")),
         "A5": "review" if s["errors"] else "pass",
@@ -431,7 +434,8 @@ def main():
     ap.add_argument("--sitemap", type=int, default=0, metavar="N", help="Also analyse up to N URLs from sitemap.xml")
     ap.add_argument("--ua", default="gptbot", choices=sorted(USER_AGENTS), help="User-Agent to send (default gptbot)")
     ap.add_argument("--pretty", action="store_true", help="Indent JSON output")
-    args = ap.parse_args()
+    # intermixed: paths may come before or after the options
+    args = ap.parse_intermixed_args()
 
     base = args.base if "://" in args.base else "https://" + args.base
     ua = USER_AGENTS[args.ua]
@@ -480,6 +484,7 @@ def main():
         "pages_without_single_h1": [p["url"] for p in indexable if len(p.get("h1", [])) != 1],
         "duplicate_titles": sorted({t for t in titles if t and titles.count(t) > 1}),
         "pages_likely_client_rendered": [p["url"] for p in indexable if p.get("likely_client_rendered")],
+        "pages_low_text": [p["url"] for p in indexable if p.get("low_text") and not p.get("likely_client_rendered")],
         # small pages with a low ratio are harmless; only flag ones big enough to risk truncation
         "pages_low_text_ratio": [f'{p["url"]} ({p["text_ratio_pct"]}%, {p["html_bytes"]} bytes)' for p in indexable if p.get("text_ratio_pct", 100) < 2 and p.get("html_bytes", 0) > LOW_RATIO_MIN_BYTES],
         "pages_with_heading_skips": [p["url"] for p in indexable if p.get("heading_level_skipped")],

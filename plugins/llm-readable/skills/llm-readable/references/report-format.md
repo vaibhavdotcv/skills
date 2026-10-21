@@ -79,6 +79,7 @@ Then ask for approval (Phase 5).
 # What I changed
 
 **Score:** <XX>% → <YY>% · **Build:** <passed/failed + command> · **Re-checked with:** bot_view.py on <local build / preview URL>
+**Applies to:** <the local build (live once deployed) / the live site>
 
 ## Problem → change
 | # | Problem (from the audit) | Status | What changed | Files |

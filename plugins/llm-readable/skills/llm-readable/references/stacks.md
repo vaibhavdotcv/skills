@@ -22,6 +22,8 @@ If a build script is the only option, wire it into the existing build (`prebuild
 - Sitemap: `app/sitemap.(js|ts)` default export returning `[{ url, lastModified, priority }]`. Robots: `app/robots.(js|ts)`.
 - llms: route handlers `app/llms.txt/route.(js|ts)` and `app/llms-full.txt/route.(js|ts)` with `export const dynamic = "force-static"` and `GET` returning `new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } })`. Don't import client components (`"use client"`) into them; split data from components if needed.
 - JSON-LD: `<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }} />` in the root layout (Person) and in pages (CreativeWork/BlogPosting).
+- Client-only nav (`"use client"` with `if (!mounted) return null`): return `<nav aria-label="Main" className={srOnly}>` with a `<Link>` per item instead of `null`; the dock replaces it after hydration. `usePathname()` works during SSR, so route-based hiding can stay.
+- Root `<main>`: if pages don't render one, change the page's outer `div` to `main`; a `layout` can't add it when some pages already have their own.
 - Alt text: `next/image` `alt`; content data objects usually hold `alt` fields.
 - Check: `next build` output lists `/robots.txt`, `/sitemap.xml`, `/llms.txt` as static; built HTML lives in `.next/server/app/*.html` for inspection.
 

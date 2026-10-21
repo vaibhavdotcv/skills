@@ -31,7 +31,7 @@ HTML before stripping tags. Assume a model that reads raw HTML once, top to bott
 
 **A1 Content is in the initial HTML** (Critical, auto/partial)
 - Why: most LLM fetchers don't execute JS. A client-rendered page looks empty to them.
-- Detect: bot `likely_client_rendered`, low `text_chars` on content pages; static: SPA with `<div id="root">` and no SSR/SSG/prerender.
+- Detect: bot `likely_client_rendered` (little text and no h1: an empty shell); static: SPA with `<div id="root">` and no SSR/SSG/prerender. Pages in `pages_low_text` have an h1 but little text: usually a photo grid or short list rendered on the server. Confirm in the HTML; that's a Pass, not an A1 failure.
 - Fix: enable SSG/SSR/prerendering for the stack (see stacks.md). If impossible, ship llms-full.txt and a `<noscript>` summary as a stopgap and say it's a stopgap.
 
 **A2 Text isn't hidden behind interaction** (High, auto)
@@ -57,18 +57,18 @@ HTML before stripping tags. Assume a model that reads raw HTML once, top to bott
 
 **A6 Host redirects are permanent and there's one canonical host** (Medium, platform/auto)
 - Why: 302/307 tells crawlers the move is temporary, so apex vs www (or old domain) can be treated as separate sites.
-- Detect: bot `home_redirects`, `non_permanent_redirects`.
+- Detect: bot `home_redirects`, `non_permanent_redirects` (base URL only). Also `curl -sI` the apex and `www` of **every** domain the site has used: a second domain that serves the whole site with 200 is a duplicate site, and a domain that redirects to its own `www`, which then serves 200, is still one.
 - Fix: hosting/DNS setting (Vercel: Domains → Edit → 308; Netlify: `_redirects` with `301!`; Cloudflare: redirect rule 301). Code-level redirects in the framework config if that's where they live.
 
 **A7 Unfinished, test and placeholder pages are noindexed or removed** (High, auto)
 - Why: a crawler that finds a `/sandbox`, `/test` or lorem-ipsum page will credit it to the author.
-- Detect: static: playground/sandbox/test/draft routes, lorem, fake links; bot `placeholder_text_hits`, `fake_links`.
-- Fix: delete, or add `noindex` (meta robots) **and** exclude from sitemap and llms files. Ask before deleting.
+- Detect: static: playground/sandbox/test/draft routes, lorem, fake links; bot `placeholder_text_hits`, `fake_links`. Placeholder content often reads as real: template milestones with specific numbers, plausible project lists that all link to the same URL, titles that contradict the experience page. Cross-check claims against the rest of the site.
+- Fix: delete, keep only the real items, or add `noindex` (meta robots) **and** exclude from sitemap and llms files. Ask before deleting. Don't also block a noindexed path in robots.txt if it may already be indexed, or crawlers never see the noindex.
 
 **A8 Primary navigation is in the initial HTML** (High, auto)
 - Why: crawlers discover pages by following links. A navbar or menu that only renders after hydration (`if (!mounted) return null`, `useEffect`-gated, opened by click and fetched lazily) leaves the home page linking to almost nothing, so whole sections are found only via the sitemap, or never.
 - Detect: bot `pages_not_linked_from_home` / `home_internal_links` (run with `--sitemap` or pass all routes); static: the nav component's render guards.
-- Fix: render the nav links on the server (animate on the client if needed), or at minimum a server-rendered link list (footer/`<noscript>`) to every main section.
+- Fix: render the nav links on the server (animate on the client if needed). The no-visual-change version: where the component returns `null` before mount, return the same links as a visually hidden `<nav>` list instead. Or at minimum a server-rendered link list (footer/`<noscript>`) to every main section.
 
 ## B. Machine-readable summaries
 
@@ -126,7 +126,7 @@ HTML before stripping tags. Assume a model that reads raw HTML once, top to bott
 
 **E1 Exactly one h1 per page** (Medium, auto). Detect: bot `pages_without_single_h1`.
 
-**E2 No skipped heading levels**, and section titles are real headings rather than styled divs (Low, auto). Detect: bot `heading_level_skipped`, `headings`.
+**E2 No skipped heading levels**, and section titles are real headings rather than styled divs (Low, auto). Detect: bot `heading_level_skipped`, `headings`. Fix: change the tag in the shared section component (often h3 → h2). It's invisible if the class sets its own font and the global CSS resets margins; check that no table of contents or scroll spy selects headings by tag.
 
 **E3 Landmarks** (`main`, `nav`, `article`, `header`, `footer`) (Low, auto).
 
@@ -145,8 +145,8 @@ These are scored per site type. For portfolios:
 - **F1 Role and ownership** stated per project ("I led…", "my role: …"), not only "we". (High, input)
 - **F2 Context:** company, team, collaborators, duration, platform. (High, input)
 - **F3 Problem → process → decisions** with reasons. (Medium, usually already present)
-- **F4 Outcomes:** metrics, or a qualitative result, or shipped/not shipped. (High, input; the biggest gap on most portfolios)
-- **F5 Unambiguous dates:** project period, not just a publish date with no label. (High, input)
+- **F4 Outcomes:** metrics, or a qualitative result, or shipped/not shipped. (High, input; the biggest gap on most portfolios.) If the author keeps metrics private, add their fallback ("metrics on request: email …") to llms files and score Partial by their choice.
+- **F5 Unambiguous dates:** project period, not just a publish date with no label. (High, input.) Publish and project dates may differ legitimately. Link each project to the role it was done in and state that role's tenure, and label the write-up date "Published". Check whether the page displays the date at all before proposing a visible label.
 - **F6 Explicit skills/tools/domains**, matchable against job descriptions. (Medium, input)
 - **F7 Current role, location/timezone, availability, contact.** (Medium, input)
 - **F8 No typos in titles/headings; no copy-pasted leftovers in data files.** (Low, auto. Fix obvious typos only and list each one.)
@@ -161,7 +161,7 @@ These are scored per site type. For portfolios:
 
 **G2 Unique alt text**: no identical alt on different images. (Low, auto)
 
-**G3 Videos described** (Medium, auto)
+**G3 Videos described** (Medium, auto). Detect: bot `videos_unlabelled`. If the data has labels but the count is still high, the media component isn't passing `alt` on to the `<video>` as `aria-label`.
 - Fix: `aria-label`/caption describing what the video demonstrates; extract a frame (ffmpeg `-ss 2 -frames:v 1`) to see it. Long talks/demos: transcript or summary text.
 
 **G4 Résumé available as text** (Medium, auto/input)
@@ -211,7 +211,7 @@ Score = (Pass + 0.5 × Partial) / (Total − N/A).
 ## Quick map: bot_view.py field → checks
 | Field | Checks |
 |---|---|
-| `likely_client_rendered`, `text_chars` | A1 |
+| `likely_client_rendered`, `pages_low_text`, `text_chars` | A1 |
 | `site_files./robots.txt.ai_bots` | A3 |
 | `home_internal_links`, `pages_not_linked_from_home` | A8 |
 | `site_files./sitemap.xml` | A4 |
