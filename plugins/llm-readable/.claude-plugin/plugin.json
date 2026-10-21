@@ -1,0 +1,13 @@
+{
+  "name": "llm-readable",
+  "description": "Audit any portfolio or website for how well LLMs and AI screeners can read it, then fix what's holding it back: crawlability, llms.txt, structured data, metadata, alt text and content gaps.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Vaibhav Aggarwal",
+    "url": "https://www.vaibhav.cv"
+  },
+  "homepage": "https://github.com/vaibhavdotcv/skills/tree/main/plugins/llm-readable",
+  "repository": "https://github.com/vaibhavdotcv/skills",
+  "license": "MIT",
+  "keywords": ["llm", "llms.txt", "seo", "geo", "aeo", "portfolio", "structured-data", "accessibility"]
+}

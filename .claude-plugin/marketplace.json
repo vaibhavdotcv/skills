@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "vaibhav-skills",
+  "description": "Claude Code skills by Vaibhav Aggarwal.",
+  "owner": { "name": "Vaibhav Aggarwal", "url": "https://www.vaibhav.cv" },
+  "plugins": [
+    {
+      "name": "llm-readable",
+      "source": "./plugins/llm-readable",
+      "description": "Audit any portfolio or website for how well LLMs and AI screeners can read it, then fix what's holding it back.",
+      "category": "productivity",
+      "author": { "name": "Vaibhav Aggarwal" }
+    }
+  ]
+}
