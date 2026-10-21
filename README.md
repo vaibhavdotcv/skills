@@ -1,4 +1,4 @@
-# Vaibhav's skills
+# Skills for designers and engineers
 
 Claude Code skills I've built, in one place. Add the marketplace once, then install the ones you want.
 
