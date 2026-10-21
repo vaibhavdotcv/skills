@@ -26,7 +26,16 @@ In Claude Code:
 /plugin install llm-readable@vaibhav-skills
 ```
 
-Restart Claude Code if the skill doesn't show up right away.
+Then restart Claude Code.
+
+## Update
+
+```
+/plugin marketplace update vaibhav-skills
+/plugin update llm-readable@vaibhav-skills
+```
+
+Then restart Claude Code.
 
 ## Use
 
