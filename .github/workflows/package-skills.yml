@@ -1,0 +1,49 @@
+# Zips every skill in plugins/*/skills/* and attaches the zips to the "latest"
+# release, so people who don't use Claude Code can download and upload them.
+# Stable download link: https://github.com/vaibhavdotcv/skills/releases/download/latest/<skill>.zip
+
+name: Package skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/**"
+      - ".github/workflows/package-skills.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: package-skills
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip each skill
+        run: |
+          mkdir -p dist
+          for skill in plugins/*/skills/*/; do
+            name=$(basename "$skill")
+            (cd "$(dirname "$skill")" && zip -rq "$GITHUB_WORKSPACE/dist/$name.zip" "$name" \
+              -x '*.DS_Store' '*__pycache__*')
+            echo "Packaged $name"
+          done
+          ls -l dist
+
+      - name: Publish to the "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git tag -f latest
+          git push -f origin latest
+          if ! gh release view latest >/dev/null 2>&1; then
+            gh release create latest --title "Latest skills" \
+              --notes "Ready-to-upload zips of every skill, rebuilt on each change. See the README for how to install them."
+          fi
+          gh release upload latest dist/*.zip --clobber

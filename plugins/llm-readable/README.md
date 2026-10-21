@@ -37,6 +37,8 @@ Then restart Claude Code.
 
 Then restart Claude Code.
 
+Not using Claude Code? Download [llm-readable.zip](https://github.com/vaibhavdotcv/skills/releases/download/latest/llm-readable.zip) and follow the steps for the [Claude app](../../README.md#claude-app-and-claudeai) or [other AI tools](../../README.md#other-ai-tools).
+
 ## Use
 
 Open your site's project folder in Claude Code and run:
